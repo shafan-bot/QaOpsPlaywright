@@ -1,0 +1,177 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: ecommerce.spec.js >> List all items in the page
+- Location: tests/ecommerce.spec.js:3:1
+
+# Error details
+
+```
+Error: expect(received).toBeFalsy()
+
+Received: true
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e5]:
+      - generic [ref=e7]:
+        - link "Automation Automation Practice":
+          - /url: ""
+          - generic [ref=e8] [cursor=pointer]:
+            - heading "Automation" [level=3] [ref=e9]
+            - paragraph [ref=e10]: Automation Practice
+      - text: 
+      - link "Get Shortlisted by Recruiters - Take QA Skill Assessments on TechSmartHire" [ref=e11] [cursor=pointer]:
+        - /url: https://techsmarthire.com/
+      - list [ref=e12]:
+        - listitem [ref=e13] [cursor=pointer]:
+          - button " HOME" [ref=e14]:
+            - generic [ref=e15]: 
+            - text: HOME
+        - listitem
+        - listitem [ref=e16] [cursor=pointer]:
+          - button " ORDERS" [ref=e17]:
+            - generic [ref=e18]: 
+            - text: ORDERS
+        - listitem [ref=e19] [cursor=pointer]:
+          - button " Cart 1" [ref=e20]:
+            - generic [ref=e21]: 
+            - text: Cart
+            - generic [ref=e22]: "1"
+        - listitem [ref=e23] [cursor=pointer]:
+          - button "Sign Out" [ref=e24]:
+            - generic [ref=e25]: 
+            - text: Sign Out
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - heading "My Cart" [level=1] [ref=e28]
+        - button "Continue Shopping❯" [ref=e29] [cursor=pointer]
+      - list [ref=e31]:
+        - listitem [ref=e32] [cursor=pointer]:
+          - generic [ref=e33]:
+            - generic [ref=e34]:
+              - paragraph [ref=e35]: "#6960eae1c941646b7a8b3ed3"
+              - heading "ADIDAS ORIGINAL" [level=3] [ref=e36]
+              - paragraph [ref=e37]: MRP $ 11500
+              - paragraph [ref=e38]: In Stock
+            - paragraph [ref=e40]: $ 11500
+            - generic [ref=e41]:
+              - button "Buy Now❯" [ref=e42]
+              - button "❯" [ref=e43]:
+                - generic [ref=e44]: 
+                - text: ❯
+      - list [ref=e46]:
+        - listitem [ref=e47]:
+          - generic [ref=e48]: Subtotal
+          - generic [ref=e49]: $11500
+        - listitem [ref=e50]:
+          - generic [ref=e51]: Total
+          - generic [ref=e52]: $11500
+        - listitem [ref=e53]:
+          - button "Checkout❯" [ref=e54] [cursor=pointer]
+  - alert "Product Added To Cart" [ref=e56]
+```
+
+# Test source
+
+```ts
+  1  | const { test, expect } = require('@playwright/test');
+  2  | 
+  3  | test('List all items in the page', async({page})=> 
+  4  | {
+  5  | const userEmail = page.locator('#userEmail');
+  6  | const Login = page.locator('#login');
+  7  | const products = page.locator(".card-body");
+  8  | const productName = 'ADIDAS ORIGINAL'
+  9  | 
+  10 | await page.goto('https://rahulshettyacademy.com/client/#/auth/login');
+  11 | 
+  12 | await page.locator('#userEmail').fill('shafans32@gmail.com');       // to enter email id 
+  13 | await page.locator('#userPassword').fill('nDFrDdJuCq5.Gqz');        // to enter password
+  14 | 
+  15 | await page.locator('#login').click();                               // to click on login button
+  16 | // you can also write this to get login web element - await page.getByRole('button', { name: 'login' });
+  17 | 
+  18 | //to print all the name of items
+  19 | 
+  20 | await page.waitForLoadState('networkidle');   // waits until all the API's are loaded 
+  21 | await page.locator('.card-body b').first().waitFor();
+  22 | const titles = await page.locator('.card-body b').allTextContents();
+  23 | 
+  24 | console.log(titles);
+  25 | 
+  26 | // To add Adidas original to cart 
+  27 | // first to identify the title name = productName
+  28 | 
+  29 | const productCount = await products.count();
+  30 | 
+  31 | for(let i =0; i < productCount; ++i)
+  32 | {
+  33 | if (await products.nth(i).locator("b").textContent() === productName)
+  34 | 
+  35 | {
+  36 | await products.nth(i).locator("text= Add To Cart").click();
+  37 | break;
+  38 | }
+  39 | }
+  40 | 
+  41 | await page.locator("[routerlink*='cart']").click();
+  42 | 
+  43 | const bool = await page.locator("h3:has-text('ADIDAS ORIGINAL')").isVisible();
+> 44 | expect(bool).toBeFalsy();
+     |              ^ Error: expect(received).toBeFalsy()
+  45 | 
+  46 | await page.getByRole('button', { name: 'Checkout' } ).click();
+  47 | 
+  48 | // await page.locator().waitFor()
+  49 | await page.getByPlaceholder('Select Country').pressSequentially('ind');
+  50 | const dropdown = await page.locator(".ta-results");
+  51 | await dropdown.waitFor();
+  52 | const dropdownCount = await dropdown.count();
+  53 | 
+  54 | await page.locator(".ta-results button:has-text('India')").last().click();
+  55 | 
+  56 | await expect(
+  57 |   page.locator(".user__name [type='text']").first()
+  58 | ).toContainText('shafans32@gmail.com');
+  59 | 
+  60 | await page.locator(".btnn.action__submit.ng-star-inserted").click();
+  61 | await expect(page.locator(".hero-primary")).toHaveText(/ Thankyou for the order. /);
+  62 | 
+  63 | const orderID = await page.locator(".ng-star-inserted .ng-star-inserted").nth(1).textContent();
+  64 | 
+  65 | console.log(orderID);
+  66 | 
+  67 | const rows = page.locator("tbody tr")
+  68 | 
+  69 | await page.locator('button[routerlink*="myorders"]').click();
+  70 | await page.waitForLoadState('networkidle')
+  71 | 
+  72 | const rowsCount = await rows.count();
+  73 | 
+  74 | for(let i=0; i<rowsCount; ++i)
+  75 |  {
+  76 |     const rowOrderID = await rows.nth(i).locator("th").textContent();
+  77 |     if(orderID.includes(rowOrderID))
+  78 |      {
+  79 |         await rows.nth(i).locator("button").first().click();
+  80 |         break; 
+  81 |         }
+  82 | }
+  83 | 
+  84 | const orderIdDetails = await page.locator(".col-text").textContent();
+  85 | expect(orderID.includes(orderIdDetails)).toBeTruthy();
+  86 | 
+  87 | });
+  88 | 
+  89 | 
+```
